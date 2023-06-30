@@ -52,5 +52,22 @@
         <input type="submit" value="Sign in" class="btn btn-default margin-top-10" />
     </form>
     <br />
+    <hr />
+    <br />
+    <label class="color-yellow"> Low vulnerable for SQL Injection (Character Escaping)</label>
+    <form asp-action="SignIn4">
+        <label>
+            Username:
+            <input name="username" type="text" class="form-control" />
+        </label>
+        <br />
+        <label>
+            Password:
+            <input name="password" type="password" class="form-control" />
+        </label>
+        <br />
+        <input type="submit" value="Sign in" class="btn btn-default margin-top-10" />
+    </form>
+    <br />
     <a href="/Users/SignUp">Sign up</a>
 </div>

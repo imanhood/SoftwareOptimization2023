@@ -33,13 +33,13 @@ namespace SoftwareOptimization.Controllers {
         public IActionResult SignIn() {
            if(User.Identity.IsAuthenticated)
                 return RedirectToAction("Index", "Tickets");
-            return View();
+            return View("SignIn");
         }
 
         [HttpPost] // With CommandText , Vulnerable to SQL Injection
         public async Task<IActionResult> SignIn(string username, string password) {
             if(string.IsNullOrWhiteSpace(username) || string.IsNullOrWhiteSpace(password))
-                return View(); // bad request
+                return View("SignIn"); // bad request
             using(var connection = new SqlConnection(connectionString))
             {
                 using(var command = connection.CreateCommand())
@@ -60,7 +60,7 @@ namespace SoftwareOptimization.Controllers {
                     }
                     connection.Close();
                     if (userId == 0)
-                        return View();
+                        return View("SignIn");
 
                     await SignUser(username, userId);
 
@@ -127,6 +127,48 @@ namespace SoftwareOptimization.Controllers {
             return RedirectToAction("Index", "Tickets");
         }
 
+        [HttpPost] // With CommandText by filtering dangourous characters , Low vulnerable to SQL Injection
+        public async Task<IActionResult> SignIn4(string username, string password) {
+            if (string.IsNullOrWhiteSpace(username) || string.IsNullOrWhiteSpace(password))
+                return View("SignIn"); // bad request
+            var suspeciousCharacters = new List<char>();
+            
+            if ((username + password).Contains("'"))
+                return View("SignIn"); // suspecious characters - cottation
+            if ((username + password).Contains("--"))
+                return View("SignIn"); // suspecious characters - comment
+            if (username.Contains(";"))
+                return View("SignIn"); // suspecious characters - semicolumn
+
+            using (var connection = new SqlConnection(connectionString))
+            {
+                using (var command = connection.CreateCommand())
+                {
+
+                    // **** Using pure SQL Query vulnerable to SQL Injection
+                    command.CommandType = System.Data.CommandType.Text;
+                    command.CommandText = $"SELECT Id FROM dbo.Users WHERE Username = '{username}' AND Password = '{password}'";
+                    command.Parameters.Add("@userid", System.Data.SqlDbType.Int).Direction = System.Data.ParameterDirection.Output;
+                    command.Parameters.Add("@state", System.Data.SqlDbType.Int).Direction = System.Data.ParameterDirection.Output;
+
+                    connection.Open();
+                    int userId = 0;
+                    var dbReader = await command.ExecuteReaderAsync();
+                    if (dbReader.Read())
+                    {
+                        userId = dbReader.GetInt32(0);
+                    }
+                    connection.Close();
+                    if (userId == 0)
+                        return View("SignIn");
+
+                    await SignUser(username, userId);
+
+                    return RedirectToAction("Index", "Tickets");
+                }
+            }
+        }
+
         private async Task SignUser(string username, int userId) {
             // Initial FormsAuthentication
             var claims = new List<Claim>
@@ -148,13 +190,13 @@ namespace SoftwareOptimization.Controllers {
         public IActionResult SignUp() {
             if (User.Identity.IsAuthenticated)
                 return RedirectToAction("Index", "Tickets");
-            return View();
+            return View("SignUp");
         }
 
         [HttpPost]
         public async Task<IActionResult> SignUp(string username, string password) {
             if (string.IsNullOrWhiteSpace(username) || string.IsNullOrWhiteSpace(password))
-                return View(); // bad request
+                return View("SignUp"); // bad request
             using (var connection = new SqlConnection(connectionString))
             {
                 using (var command = connection.CreateCommand())
@@ -176,9 +218,9 @@ namespace SoftwareOptimization.Controllers {
                             userId = Convert.ToInt32(command.Parameters["@UserId"].Value);
                             break;
                         case 2: // bad request
-                            return View();
+                            return View("SignUp");
                         case 3: // username is duplicated
-                            return View();
+                            return View("SignUp");
                         default:
                             throw new Exception($"Unhandled state: {state}");
                     }
