@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.HttpsPolicy;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -21,6 +22,12 @@ namespace SoftwareOptimization {
 
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services) {
+            services.AddDbContext<DatabaseContext>(options =>
+                options.UseSqlServer(
+                Configuration.GetConnectionString("DefaultConnection"),
+                ef => ef.MigrationsAssembly(typeof(DatabaseContext).Assembly.FullName)));
+            //services.AddScoped<DatabaseContext>(provider => provider.GetService<DatabaseContext>());
+
             services.AddControllersWithViews();
             services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
             .AddCookie(CookieAuthenticationDefaults.AuthenticationScheme,
@@ -29,6 +36,7 @@ namespace SoftwareOptimization {
                     options.LoginPath = new PathString("/Users/SignIn");
                     //options.AccessDeniedPath = new PathString("/auth/denied");
                 });
+
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

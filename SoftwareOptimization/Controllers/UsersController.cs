@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Data.SqlClient;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using SoftwareOptimization.Models;
@@ -19,11 +20,13 @@ namespace SoftwareOptimization.Controllers {
     public class UsersController : Controller {
         private readonly ILogger<HomeController> _logger;
         private readonly IConfiguration configuration;
+        private readonly DatabaseContext dbContext;
         private readonly string connectionString;
-        public UsersController(ILogger<HomeController> logger, IConfiguration config) {
+        public UsersController(ILogger<HomeController> logger, IConfiguration config, DatabaseContext dbContext) {
             configuration = config;
             connectionString = configuration.GetConnectionString("DefaultConnection");
             _logger = logger;
+            this.dbContext = dbContext;
         }
 
         [HttpGet]
@@ -33,7 +36,7 @@ namespace SoftwareOptimization.Controllers {
             return View();
         }
 
-        [HttpPost]
+        [HttpPost] // With CommandText , Vulnerable to SQL Injection
         public async Task<IActionResult> SignIn(string username, string password) {
             if(string.IsNullOrWhiteSpace(username) || string.IsNullOrWhiteSpace(password))
                 return View(); // bad request
@@ -44,27 +47,20 @@ namespace SoftwareOptimization.Controllers {
                    
                     // **** Using pure SQL Query vulnerable to SQL Injection
                     command.CommandType = System.Data.CommandType.Text;
-                    command.CommandText = $"EXEC dbo.Users_SignIn @Password = '{password}', @State = @State OUT, @UserId = @UserId OUT, @Username = '{username}'";
+                    command.CommandText = $"SELECT Id FROM dbo.Users WHERE Username = '{username}' AND Password = '{password}'";
                     command.Parameters.Add("@userid", System.Data.SqlDbType.Int).Direction = System.Data.ParameterDirection.Output;
                     command.Parameters.Add("@state", System.Data.SqlDbType.Int).Direction = System.Data.ParameterDirection.Output;
 
                     connection.Open();
-                    await command.ExecuteNonQueryAsync();
-                    connection.Close();
-                    int state = Convert.ToInt32(command.Parameters["@State"].Value);
                     int userId = 0;
-                    switch(state)
+                    var dbReader = await command.ExecuteReaderAsync();
+                    if (dbReader.Read())
                     {
-                        case 1:
-                            userId = Convert.ToInt32(command.Parameters["@UserId"].Value);
-                            break;
-                        case 2: // bad request
-                            return View();
-                        case 3: // user not found
-                            return View();
-                        default:
-                            throw new Exception($"Unhandled state: {state}");
+                        userId = dbReader.GetInt32(0);
                     }
+                    connection.Close();
+                    if (userId == 0)
+                        return View();
 
                     await SignUser(username, userId);
 
@@ -73,7 +69,7 @@ namespace SoftwareOptimization.Controllers {
             }
         }
 
-        [HttpPost]
+        [HttpPost] // With StoreProcedure
         public async Task<IActionResult> SignIn2(string username, string password) {
             if (string.IsNullOrWhiteSpace(username) || string.IsNullOrWhiteSpace(password))
                 return View("SignIn");// bad request
@@ -113,6 +109,22 @@ namespace SoftwareOptimization.Controllers {
                     return RedirectToAction("Index", "Home");
                 }
             }
+        }
+
+        [HttpPost] // With Entity Frameword
+        public async Task<IActionResult> SignIn3(string username, string password) {
+
+            if (string.IsNullOrWhiteSpace(username) || string.IsNullOrWhiteSpace(password))
+                return View("SignIn");// bad request
+
+            var user = await dbContext.Users.FirstOrDefaultAsync(x => x.Username == username);
+
+            if (user == null || user.Password.Equals(password) == false)
+                return View("SignIn");
+
+            await SignUser(username, user.Id);
+
+            return RedirectToAction("Index", "Home");
         }
 
         private async Task SignUser(string username, int userId) {
