@@ -32,7 +32,7 @@ namespace SoftwareOptimization.Controllers {
         [HttpGet]
         public IActionResult SignIn() {
            if(User.Identity.IsAuthenticated)
-                return RedirectToAction("Index", "Home");
+                return RedirectToAction("Index", "Tickets");
             return View();
         }
 
@@ -64,7 +64,7 @@ namespace SoftwareOptimization.Controllers {
 
                     await SignUser(username, userId);
 
-                    return RedirectToAction("Index", "Home");
+                    return RedirectToAction("Index", "Tickets");
                 }
             }
         }
@@ -106,7 +106,7 @@ namespace SoftwareOptimization.Controllers {
 
                     await SignUser(username, userId);
 
-                    return RedirectToAction("Index", "Home");
+                    return RedirectToAction("Index", "Tickets");
                 }
             }
         }
@@ -124,7 +124,7 @@ namespace SoftwareOptimization.Controllers {
 
             await SignUser(username, user.Id);
 
-            return RedirectToAction("Index", "Home");
+            return RedirectToAction("Index", "Tickets");
         }
 
         private async Task SignUser(string username, int userId) {
@@ -147,7 +147,7 @@ namespace SoftwareOptimization.Controllers {
         [HttpGet]
         public IActionResult SignUp() {
             if (User.Identity.IsAuthenticated)
-                return RedirectToAction("Index", "Home");
+                return RedirectToAction("Index", "Tickets");
             return View();
         }
 
@@ -185,7 +185,7 @@ namespace SoftwareOptimization.Controllers {
 
                     await SignUser(username, userId);
 
-                    return RedirectToAction("Index", "Home");
+                    return RedirectToAction("Index", "Tickets");
                 }
             }
         }
@@ -193,7 +193,7 @@ namespace SoftwareOptimization.Controllers {
         [HttpGet]
         public async Task<IActionResult> SignOut() {
             await HttpContext.SignOutAsync();
-            return RedirectToAction("Index", "Home");
+            return RedirectToAction("SignIn", "Users");
         }
     }
 }
