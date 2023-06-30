@@ -22,9 +22,9 @@ namespace SoftwareOptimization.Controllers
         // GET: Tickets
         public async Task<IActionResult> Index()
         {
-            var databaseContext = dbContext.Tickets.Include(t => t.User);
-            int userId = int.Parse(User.Identity.Name.Split('|')[0]);
-            return View(await databaseContext.Where(x => x.UserId == userId).ToListAsync());
+            var tickets = dbContext.Tickets.AsNoTracking().Include(t => t.User);
+            int userId = User.Identity.GetUserId();
+            return View(await tickets.Where(x => x.UserId == userId).ToListAsync());
         }
 
         // GET: Tickets/Details/5
@@ -43,7 +43,7 @@ namespace SoftwareOptimization.Controllers
                 return NotFound();
             }
 
-            if (ticket.UserId != int.Parse(User.Identity.Name.Split('|')[0]))
+            if (ticket.UserId != User.Identity.GetUserId())
             {
                 return NotFound();
             }
@@ -66,7 +66,7 @@ namespace SoftwareOptimization.Controllers
         {
             if (ModelState.IsValid)
             {
-                ticket.UserId = int.Parse(User.Identity.Name.Split('|')[0]);
+                ticket.UserId = User.Identity.GetUserId();
                 ticket.CreatedAt = DateTime.Now;
                 dbContext.Add(ticket);
                 await dbContext.SaveChangesAsync();
@@ -88,7 +88,7 @@ namespace SoftwareOptimization.Controllers
             {
                 return NotFound();
             }
-            if (ticket.UserId != int.Parse(User.Identity.Name.Split('|')[0]))
+            if (ticket.UserId != User.Identity.GetUserId())
             {
                 return NotFound();
             }
@@ -113,7 +113,7 @@ namespace SoftwareOptimization.Controllers
             {
                 return NotFound();
             }
-            if (oldTicket.UserId != int.Parse(User.Identity.Name.Split('|')[0]))
+            if (oldTicket.UserId != User.Identity.GetUserId())
             {
                 return NotFound();
             }
@@ -160,7 +160,7 @@ namespace SoftwareOptimization.Controllers
                 return NotFound();
             }
 
-            if (ticket.UserId != int.Parse(User.Identity.Name.Split('|')[0]))
+            if (ticket.UserId != User.Identity.GetUserId())
             {
                 return NotFound();
             }
@@ -174,7 +174,7 @@ namespace SoftwareOptimization.Controllers
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
             var ticket = await dbContext.Tickets.FindAsync(id);
-            if (ticket.UserId != int.Parse(User.Identity.Name.Split('|')[0]))
+            if (ticket.UserId != User.Identity.GetUserId())
             {
                 return NotFound();
             }

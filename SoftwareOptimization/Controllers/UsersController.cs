@@ -179,6 +179,7 @@ namespace SoftwareOptimization.Controllers {
 
         private async Task SignUser(string username, int userId) {
             // Initial FormsAuthentication
+            
             var claims = new List<Claim>
                     {
                         new Claim(ClaimTypes.Name, $"{userId}|{username}"),
@@ -191,6 +192,7 @@ namespace SoftwareOptimization.Controllers {
                 IsPersistent = true
             };
             await HttpContext.SignInAsync(claimPrinciple, authenticationProperty);
+            
             // End initial FormsAuthentication
         }
 

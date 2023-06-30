@@ -30,12 +30,12 @@ namespace SoftwareOptimization {
 
 
             services.AddControllersWithViews();
+            
             services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
             .AddCookie(CookieAuthenticationDefaults.AuthenticationScheme,
                 options =>
                 {
                     options.LoginPath = new PathString("/Users/SignIn");
-                    //options.AccessDeniedPath = new PathString("/auth/denied");
                 });
 
         }
