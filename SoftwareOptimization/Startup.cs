@@ -22,11 +22,12 @@ namespace SoftwareOptimization {
 
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services) {
+            
             services.AddDbContext<DatabaseContext>(options =>
                 options.UseSqlServer(
                 Configuration.GetConnectionString("DefaultConnection"),
                 ef => ef.MigrationsAssembly(typeof(DatabaseContext).Assembly.FullName)));
-            //services.AddScoped<DatabaseContext>(provider => provider.GetService<DatabaseContext>());
+
 
             services.AddControllersWithViews();
             services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)

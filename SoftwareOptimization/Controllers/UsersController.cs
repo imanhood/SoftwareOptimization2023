@@ -47,9 +47,13 @@ namespace SoftwareOptimization.Controllers {
                    
                     // **** Using pure SQL Query vulnerable to SQL Injection
                     command.CommandType = System.Data.CommandType.Text;
-                    command.CommandText = $"SELECT Id FROM dbo.Users WHERE Username = '{username}' AND Password = '{password}'";
-                    command.Parameters.Add("@userid", System.Data.SqlDbType.Int).Direction = System.Data.ParameterDirection.Output;
-                    command.Parameters.Add("@state", System.Data.SqlDbType.Int).Direction = System.Data.ParameterDirection.Output;
+                    command.CommandText = $"SELECT Id FROM " +
+                        $"dbo.Users WHERE Username = '{username}' " +
+                        $"AND Password = '{password}'";
+                    command.Parameters.Add("@userid", System.Data.SqlDbType.Int)
+                        .Direction = System.Data.ParameterDirection.Output;
+                    command.Parameters.Add("@state", System.Data.SqlDbType.Int)
+                        .Direction = System.Data.ParameterDirection.Output;
 
                     connection.Open();
                     int userId = 0;
@@ -59,6 +63,7 @@ namespace SoftwareOptimization.Controllers {
                         userId = dbReader.GetInt32(0);
                     }
                     connection.Close();
+
                     if (userId == 0)
                         return View("SignIn");
 
@@ -83,8 +88,10 @@ namespace SoftwareOptimization.Controllers {
                     command.CommandText = "dbo.Users_SignIn";
                     command.Parameters.AddWithValue("@username", username);
                     command.Parameters.AddWithValue("@password", password);
-                    command.Parameters.Add("@userid", System.Data.SqlDbType.Int).Direction = System.Data.ParameterDirection.Output;
-                    command.Parameters.Add("@state", System.Data.SqlDbType.Int).Direction = System.Data.ParameterDirection.Output;
+                    command.Parameters.Add("@userid", System.Data.SqlDbType.Int)
+                        .Direction = System.Data.ParameterDirection.Output;
+                    command.Parameters.Add("@state", System.Data.SqlDbType.Int)
+                        .Direction = System.Data.ParameterDirection.Output;
 
                     connection.Open();
                     await command.ExecuteNonQueryAsync();
@@ -131,7 +138,6 @@ namespace SoftwareOptimization.Controllers {
         public async Task<IActionResult> SignIn4(string username, string password) {
             if (string.IsNullOrWhiteSpace(username) || string.IsNullOrWhiteSpace(password))
                 return View("SignIn"); // bad request
-            var suspeciousCharacters = new List<char>();
             
             if ((username + password).Contains("'"))
                 return View("SignIn"); // suspecious characters - cottation
@@ -152,6 +158,7 @@ namespace SoftwareOptimization.Controllers {
                     command.Parameters.Add("@state", System.Data.SqlDbType.Int).Direction = System.Data.ParameterDirection.Output;
 
                     connection.Open();
+
                     int userId = 0;
                     var dbReader = await command.ExecuteReaderAsync();
                     if (dbReader.Read())
@@ -159,6 +166,7 @@ namespace SoftwareOptimization.Controllers {
                         userId = dbReader.GetInt32(0);
                     }
                     connection.Close();
+
                     if (userId == 0)
                         return View("SignIn");
 
